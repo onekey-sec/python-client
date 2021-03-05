@@ -7,8 +7,9 @@ authors = ["IoT Inspector <support@iot-inspector.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.1"
 httpx = "^0.17.0"
+pydantic = "^1.8.1"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
