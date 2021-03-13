@@ -39,7 +39,7 @@ class Client:
             "client_id": CLIENT_ID,
             "nonce": nonce,
         }
-        json_res = self._post("/authorize", payload)
+        json_res = self._post("/authorize", json=payload)
         id_token = _verify_token(
             nonce,
             email,
@@ -53,19 +53,19 @@ class Client:
         self._state.email = email
         self._state.raw_id_token = json_res["id_token"]
 
-    def _post(self, path: str, payload: str, headers: Optional[Dict] = None):
-        response = self._client.post(path, json=payload, headers=headers)
+    def _post(self, path: str, headers: Optional[Dict] = None, **kwargs):
+        response = self._client.post(path, headers=headers, **kwargs)
         response.raise_for_status()
         return response.json()
 
-    def _post_with_token(self, path: str, payload: str):
+    def _post_with_token(self, path: str, **kwargs):
         try:
             headers = {"Authorization": "Bearer " + self._state.raw_tenant_token}
         # in case of None + str
         except TypeError:
             raise errors.NotLoggedIn
 
-        return self._post(path, payload, headers)
+        return self._post(path, headers, **kwargs)
 
     def get_tenant(self, name: str):
         """Get Tenant by name. Raises KeyError if not found."""
@@ -95,7 +95,7 @@ class Client:
             "tenant_id": str(tenant.id),
             "nonce": nonce,
         }
-        json_res = self._post("/token", payload)
+        json_res = self._post("/token", json=payload)
         _verify_token(
             nonce,
             self._state.email,
