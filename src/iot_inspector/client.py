@@ -20,9 +20,11 @@ class Client:
         self,
         api_url: str = API_URL,
         id_token_public_key: Optional[Path] = None,
+        tenant_token_public_key: Optional[Path] = None,
         ca_bundle: Optional[Path] = None,
     ):
         self._id_token_public_key = id_token_public_key.read_bytes()
+        self._tenant_token_public_key = tenant_token_public_key.read_bytes()
         ca_bundle = ca_bundle.expanduser()
         if not ca_bundle.exists():
             raise errors.InvalidCABundle
@@ -38,10 +40,17 @@ class Client:
             "nonce": nonce,
         }
         json_res = self._post("/authorize", payload)
-        id_token = self._verify_id_token(nonce, email, json_res["id_token"])
+        id_token = _verify_token(
+            nonce,
+            email,
+            raw_token=json_res["id_token"],
+            public_key=self._id_token_public_key,
+            claims_cls=IDToken,
+        )
         tenants = id_token[BASE_URL + "tenants"]
         tenants = parse_obj_as(List[m.Tenant], tenants)
         self._state.tenants = {e.name: e for e in tenants}
+        self._state.email = email
         self._state.raw_id_token = json_res["id_token"]
 
     def _post(self, path: str, payload: str, headers: Optional[Dict] = None):
@@ -57,22 +66,6 @@ class Client:
             raise errors.NotLoggedIn
 
         return self._post(path, payload, headers)
-
-    def _verify_id_token(self, nonce: str, email, id_token: str):
-        claims_options = {
-            "iss": {"essential": True, "value": BASE_URL},
-            "aud": {"essential": True, "value": CLIENT_ID},
-            "sub": {"essential": True, "value": email},
-        }
-        id_token = jwt.decode(
-            id_token,
-            self._id_token_public_key,
-            claims_cls=IDToken,
-            claims_options=claims_options,
-            claims_params={"nonce": nonce},
-        )
-        id_token.validate()
-        return id_token
 
     def get_tenant(self, name: str):
         """Get Tenant by name. Raises KeyError if not found."""
@@ -103,9 +96,16 @@ class Client:
             "nonce": nonce,
         }
         json_res = self._post("/token", payload)
+        _verify_token(
+            nonce,
+            self._state.email,
+            json_res["tenant_token"],
+            self._tenant_token_public_key,
+        )
         # TODO: We don't want to store the id_token for long,
         # but what's the best strategy here?
         del self._state.raw_id_token
+        del self._state.email
         # force deleting unreferenced variables
         gc.collect()
         self._state.raw_id_token = None
@@ -130,12 +130,33 @@ class Client:
         self._state = _LoginState()
 
 
+def _verify_token(
+    nonce: str, email, raw_token: str, public_key: bytes, claims_cls=None
+):
+    """Verify a JWT token signature with the public_key."""
+    claims_options = {
+        "iss": {"essential": True, "value": BASE_URL},
+        "aud": {"essential": True, "value": CLIENT_ID},
+        "sub": {"essential": True, "value": email},
+    }
+    decoded_token = jwt.decode(
+        raw_token,
+        public_key,
+        claims_cls=claims_cls,
+        claims_options=claims_options,
+        claims_params={"nonce": nonce},
+    )
+    decoded_token.validate()
+    return decoded_token
+
+
 class _LoginState:
     """Keeps state after login.
     Client.logout() will simply delete the instance from memory.
     """
 
     def __init__(self):
+        self.email = None
         self.tenants = None
         self.raw_id_token = None
         self.raw_tenant_token = None
