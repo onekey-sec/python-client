@@ -6,6 +6,7 @@ import httpx
 from pydantic import parse_obj_as
 from authlib.oidc.core import IDToken
 from authlib.jose import jwt
+from .queries import load_query
 from . import errors
 from . import models as m
 
@@ -129,6 +130,33 @@ class Client:
             raise errors.QueryError(res["errors"])
 
         return res["data"]
+
+    def upload_firmware(
+        self, metadata: m.FirmwareMetadata, path: Path, *, enable_monitoring: bool
+    ):
+        variables = {
+            "firmware": {
+                "name": metadata.name,
+                "version": metadata.version,
+                "releaseDate": metadata.release_date,
+                "notes": metadata.notes,
+                "enableMonitoring": enable_monitoring,
+            },
+            "vendorName": metadata.vendor_name,
+            "productName": metadata.product_name,
+            "productCategory": metadata.product_category,
+            "productGroupID": str(metadata.product_group_id),
+        }
+
+        upload_mutation = load_query("create_firmware_upload.graphql")
+        res = self.query(upload_mutation, variables=variables)
+
+        if "errors" in res["createFirmwareUpload"]:
+            raise errors.QueryError(res["createFirmwareUpload"]["errors"])
+
+        upload_url = res["createFirmwareUpload"]["uploadUrl"]
+        res = self._post_with_token(upload_url, files={"firmware": path.open("rb")})
+        return res
 
     def logout(self):
         del self._state
