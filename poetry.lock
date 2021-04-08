@@ -169,6 +169,21 @@ python-versions = ">=3.5"
 test = ["flake8 (>=3.8.4,<3.9.0)", "pycodestyle (>=2.6.0,<2.7.0)"]
 
 [[package]]
+name = "importlib-resources"
+version = "5.1.2"
+description = "Read resources from Python packages"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+zipp = {version = ">=0.4", markers = "python_version < \"3.8\""}
+
+[package.extras]
+docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
+testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "pytest-enabler", "pytest-black (>=0.3.7)", "pytest-mypy"]
+
+[[package]]
 name = "mypy-extensions"
 version = "0.4.3"
 description = "Experimental type system extensions for programs checked with the mypy typechecker."
@@ -265,10 +280,22 @@ category = "main"
 optional = false
 python-versions = "*"
 
+[[package]]
+name = "zipp"
+version = "3.4.1"
+description = "Backport of pathlib-compatible object wrapper for zip files"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
+testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "pytest-enabler", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "115fc9433524dc46f26d36c59950a111ffa6a5d11c5b9d47bd9a49ef60f4503f"
+content-hash = "d7e1111d316cbf3635ed57951dbdc31adf431b40bb38b8eae1279a65bb5f9a06"
 
 [metadata.files]
 appdirs = [
@@ -382,6 +409,10 @@ immutables = [
     {file = "immutables-0.15-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:3b15c08c71c59e5b7c2470ef949d49ff9f4263bb77f488422eaa157da84d6999"},
     {file = "immutables-0.15-cp39-cp39-win_amd64.whl", hash = "sha256:2283a93c151566e6830aee0e5bee55fc273455503b43aa004356b50f9182092b"},
     {file = "immutables-0.15.tar.gz", hash = "sha256:3713ab1ebbb6946b7ce1387bb9d1d7f5e09c45add58c2a2ee65f963c171e746b"},
+]
+importlib-resources = [
+    {file = "importlib_resources-5.1.2-py3-none-any.whl", hash = "sha256:ebab3efe74d83b04d6bf5cd9a17f0c5c93e60fb60f30c90f56265fce4682a469"},
+    {file = "importlib_resources-5.1.2.tar.gz", hash = "sha256:642586fc4740bd1cad7690f836b3321309402b20b332529f25617ff18e8e1370"},
 ]
 mypy-extensions = [
     {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
@@ -510,4 +541,8 @@ typing-extensions = [
     {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},
     {file = "typing_extensions-3.7.4.3-py3-none-any.whl", hash = "sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918"},
     {file = "typing_extensions-3.7.4.3.tar.gz", hash = "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c"},
+]
+zipp = [
+    {file = "zipp-3.4.1-py3-none-any.whl", hash = "sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098"},
+    {file = "zipp-3.4.1.tar.gz", hash = "sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76"},
 ]
