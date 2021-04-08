@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 
@@ -21,3 +22,13 @@ class NotLoggedIn(ClientError):
 
 class InvalidCABundle(ClientError):
     MESSAGE = "The CA bundle is invalid or doesn't exist."
+
+
+class QueryError(ClientError):
+    """raised when a GraphQL query returns errors."""
+
+    def __init__(self, errors_json: dict):
+        self._errors = errors_json
+
+    def __str__(self):
+        return json.dumps(self._errors, indent=4)

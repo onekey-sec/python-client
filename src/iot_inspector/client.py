@@ -124,6 +124,10 @@ class Client:
         res = self._post_with_token(
             "/graphql", json={"query": query, "variables": variables}
         )
+
+        if "errors" in res:
+            raise errors.QueryError(res["errors"])
+
         return res["data"]
 
     def logout(self):
