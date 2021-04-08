@@ -119,9 +119,11 @@ class Client:
     def is_logged_in(self):
         return self._state.is_logged_in
 
-    def query(self, query: str):
+    def query(self, query: str, variables: Optional[Dict] = None):
         """Issues a GraphQL query and returns the results"""
-        res = self._post_with_token("/graphql", {"query": query})
+        res = self._post_with_token(
+            "/graphql", json={"query": query, "variables": variables}
+        )
         return res["data"]
 
     def logout(self):
