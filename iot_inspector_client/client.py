@@ -12,14 +12,12 @@ from . import models as m
 
 
 CLIENT_ID = "IoT Inspector Python SDK"
-BASE_URL = "https://app.iot-inspector.com/"
-API_URL = BASE_URL + "api"
 
 
 class Client:
     def __init__(
         self,
-        api_url: str = API_URL,
+        api_url: str,
         id_token_public_key: Optional[Path] = None,
         tenant_token_public_key: Optional[Path] = None,
         ca_bundle: Optional[Path] = None,
