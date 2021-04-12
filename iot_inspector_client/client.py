@@ -102,12 +102,6 @@ class Client:
             json_res["tenant_token"],
             self._tenant_token_public_key,
         )
-        # TODO: We don't want to store the id_token for long,
-        # but what's the best strategy here?
-        del self._state.raw_id_token
-        del self._state.email
-        # force deleting unreferenced variables
-        gc.collect()
         self._state.raw_id_token = None
         self._state.raw_tenant_token = json_res["tenant_token"]
 
