@@ -12,6 +12,7 @@ from . import models as m
 
 
 CLIENT_ID = "IoT Inspector Python SDK"
+TOKEN_NAMESPACE = "https://www.iot-inspector.com/"
 
 
 class Client:
@@ -46,7 +47,7 @@ class Client:
             public_key=self._id_token_public_key,
             claims_cls=IDToken,
         )
-        tenants = id_token[BASE_URL + "tenants"]
+        tenants = id_token[TOKEN_NAMESPACE + "tenants"]
         tenants = parse_obj_as(List[m.Tenant], tenants)
         self._state.tenants = {e.name: e for e in tenants}
         self._state.email = email
@@ -167,7 +168,7 @@ def _verify_token(
 ):
     """Verify a JWT token signature with the public_key."""
     claims_options = {
-        "iss": {"essential": True, "value": BASE_URL},
+        "iss": {"essential": True, "value": TOKEN_NAMESPACE},
         "aud": {"essential": True, "value": CLIENT_ID},
         "sub": {"essential": True, "value": email},
     }
