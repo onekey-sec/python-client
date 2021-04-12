@@ -31,7 +31,7 @@ class Client:
         self._client = httpx.Client(base_url=api_url, verify=str(ca_bundle))
         self._state = _LoginState()
 
-    def authorize(self, email: str, password: str):
+    def login(self, email: str, password: str):
         nonce = secrets.token_urlsafe()
         payload = {
             "email": email,
@@ -63,7 +63,7 @@ class Client:
             headers = {"Authorization": "Bearer " + self._state.raw_tenant_token}
         # in case of None + str
         except TypeError:
-            raise errors.NotLoggedIn
+            raise errors.TenantNotSelected
 
         return self._post(path, headers, **kwargs)
 
@@ -73,7 +73,7 @@ class Client:
             return self._state.tenants[name]
         # in case of None[name]
         except TypeError:
-            raise errors.NotAuthorized
+            raise errors.NotLoggedIn
 
     def get_all_tenants(self) -> List[m.Tenant]:
         """Get the list of Tenants you have access to."""
@@ -81,12 +81,12 @@ class Client:
             return list(self._state.tenants.values())
         # in case of None.tenants
         except AttributeError:
-            raise errors.NotAuthorized
+            raise errors.NotLoggedIn
 
-    def login(self, tenant: m.Tenant):
-        """Login to the selected Environment (Tenant)."""
-        if not self._state.is_authorized:
-            raise errors.NotAuthorized
+    def use_tenant(self, tenant: m.Tenant):
+        """Select the Environment (Tenant) you want to work with."""
+        if not self._state.is_logged_in:
+            raise errors.NotLoggedIn
 
         nonce = secrets.token_urlsafe()
         payload = {
@@ -110,14 +110,6 @@ class Client:
         gc.collect()
         self._state.raw_id_token = None
         self._state.raw_tenant_token = json_res["tenant_token"]
-
-    @property
-    def is_authorized(self):
-        return self._state.is_authorized
-
-    @property
-    def is_logged_in(self):
-        return self._state.is_logged_in
 
     def query(self, query: str, variables: Optional[Dict] = None):
         """Issues a GraphQL query and returns the results"""
@@ -193,11 +185,3 @@ class _LoginState:
         self.tenants = None
         self.raw_id_token = None
         self.raw_tenant_token = None
-
-    @property
-    def is_authorized(self):
-        return self.raw_id_token is not None
-
-    @property
-    def is_logged_in(self):
-        return self.raw_tenant_token is not None

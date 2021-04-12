@@ -9,15 +9,15 @@ class ClientError(Exception):
         super().__init__(message or self.MESSAGE)
 
 
-class NotAuthorized(ClientError):
+class NotLoggedIn(ClientError):
     MESSAGE = (
-        "You are not authorized yet. \n"
-        "You have to call client.authorize(email, password) first."
+        "You are not logged in yet. \n"
+        "You have to call client.login(email, password) first."
     )
 
 
-class NotLoggedIn(ClientError):
-    MESSAGE = "You have to login first."
+class TenantNotSelected(ClientError):
+    MESSAGE = "You have to select a Tenant (Environment) with client.use_tenant(tenant) first."
 
 
 class InvalidCABundle(ClientError):
