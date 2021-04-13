@@ -2,6 +2,12 @@ import gc
 import secrets
 from pathlib import Path
 from typing import Optional, List, Dict
+
+try:
+    from importlib import resources
+except ImportError:
+    import importlib_resources as resources
+
 import httpx
 from pydantic import parse_obj_as
 from authlib.oidc.core import IDToken
@@ -9,10 +15,24 @@ from authlib.jose import jwt
 from .queries import load_query
 from . import errors
 from . import models as m
+from . import keys
 
 
 CLIENT_ID = "IoT Inspector Python SDK"
 TOKEN_NAMESPACE = "https://www.iot-inspector.com/"
+
+IOT_INSPECTOR_KEYS = {
+    "demo.iot-inspector.com": {
+        "id_token_public_key": "demo_id_token_public_key.pem",
+        "tenant_token_public_key": "demo_tenant_token_public_key.pem",
+        "ca_path": "ca.pem",
+    },
+    "*.iot-inspector.com": {
+        "id_token_public_key": "platform_id_token_public_key.pem",
+        "tenant_token_public_key": "platform_tenant_token_public_key.pem",
+        "ca_path": "ca.pem",
+    },
+}
 
 
 class Client:
@@ -23,13 +43,46 @@ class Client:
         tenant_token_public_key: Optional[Path] = None,
         ca_bundle: Optional[Path] = None,
     ):
-        self._id_token_public_key = id_token_public_key.read_bytes()
-        self._tenant_token_public_key = tenant_token_public_key.read_bytes()
-        ca_bundle = ca_bundle.expanduser()
-        if not ca_bundle.exists():
-            raise errors.InvalidCABundle
-        self._client = httpx.Client(base_url=api_url, verify=str(ca_bundle))
+        self._id_token_public_key = self._load_key(
+            api_url, "id_token_public_key", id_token_public_key
+        )
+
+        self._tenant_token_public_key = self._load_key(
+            api_url, "tenant_token_public_key", tenant_token_public_key
+        )
+
+        self._client = self._setup_httpx_client(api_url, ca_bundle)
         self._state = _LoginState()
+
+    def _setup_httpx_client(self, api_url: str, ca_bundle: Optional[Path] = None):
+        if ca_bundle is not None:
+            ca = ca_bundle.expanduser()
+            if not ca.exists():
+                raise errors.InvalidCABundle
+
+            return httpx.Client(base_url=api_url, verify=str(ca))
+        else:
+            resource_name = self._get_resource_name(api_url, "ca_path")
+            with resources.path(keys, resource_name) as ca:
+                return httpx.Client(base_url=api_url, verify=str(ca))
+
+    def _load_key(self, api_url: str, key_name: str, path: Optional[Path] = None):
+        if path is not None:
+            return path.read_bytes()
+        else:
+            resource_name = self._get_resource_name(api_url, key_name)
+            return resources.read_binary(keys, resource_name)
+
+    @staticmethod
+    def _get_resource_name(api_url: str, key_name: str):
+        domain = httpx.URL(api_url).host
+        try:
+            return IOT_INSPECTOR_KEYS[domain][key_name]
+        except KeyError:
+            # We try to match on a wildcard domain as it is used for *.iot-inspector.com domain
+            domain_base = domain.split(".", maxsplit=1)[-1]
+            wildcard_domain = f"*.{domain_base}"
+            return IOT_INSPECTOR_KEYS.get(wildcard_domain, {}).get(key_name)
 
     def login(self, email: str, password: str):
         nonce = secrets.token_urlsafe()
