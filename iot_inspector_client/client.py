@@ -152,7 +152,6 @@ class Client:
             json_res["tenant_token"],
             self._tenant_token_public_key,
         )
-        self._state.raw_id_token = None
         self._state.raw_tenant_token = json_res["tenant_token"]
 
     def query(self, query: str, variables: Optional[Dict] = None):
