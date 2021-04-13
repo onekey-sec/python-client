@@ -138,9 +138,6 @@ class Client:
 
     def use_tenant(self, tenant: m.Tenant):
         """Select the Environment (Tenant) you want to work with."""
-        if not self._state.is_logged_in:
-            raise errors.NotLoggedIn
-
         nonce = secrets.token_urlsafe()
         payload = {
             "id_token": self._state.raw_id_token,
