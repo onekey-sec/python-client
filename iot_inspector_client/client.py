@@ -1,3 +1,4 @@
+import functools
 import gc
 import secrets
 from pathlib import Path
@@ -33,6 +34,28 @@ IOT_INSPECTOR_KEYS = {
         "ca_path": "ca.pem",
     },
 }
+
+
+def _login_required(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if self._state.raw_id_token is None:
+            raise errors.NotLoggedIn
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
+
+
+def _tenant_required(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if self._state.raw_tenant_token is None:
+            raise errors.TenantNotSelected
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Client:
@@ -111,31 +134,23 @@ class Client:
         response.raise_for_status()
         return response.json()
 
+    @_tenant_required
     def _post_with_token(self, path: str, **kwargs):
-        try:
-            headers = {"Authorization": "Bearer " + self._state.raw_tenant_token}
-        # in case of None + str
-        except TypeError:
-            raise errors.TenantNotSelected
+        headers = {"Authorization": "Bearer " + self._state.raw_tenant_token}
 
         return self._post(path, headers, **kwargs)
 
+    @_login_required
     def get_tenant(self, name: str):
         """Get Tenant by name. Raises KeyError if not found."""
-        try:
-            return self._state.tenants[name]
-        # in case of None[name]
-        except TypeError:
-            raise errors.NotLoggedIn
+        return self._state.tenants[name]
 
+    @_login_required
     def get_all_tenants(self) -> List[m.Tenant]:
         """Get the list of Tenants you have access to."""
-        try:
-            return list(self._state.tenants.values())
-        # in case of None.tenants
-        except AttributeError:
-            raise errors.NotLoggedIn
+        return list(self._state.tenants.values())
 
+    @_login_required
     def use_tenant(self, tenant: m.Tenant):
         """Select the Environment (Tenant) you want to work with."""
         nonce = secrets.token_urlsafe()
@@ -154,6 +169,7 @@ class Client:
         )
         self._state.raw_tenant_token = json_res["tenant_token"]
 
+    @_tenant_required
     def query(self, query: str, variables: Optional[Dict] = None):
         """Issues a GraphQL query and returns the results"""
         res = self._post_with_token(
@@ -165,6 +181,7 @@ class Client:
 
         return res["data"]
 
+    @_tenant_required
     def upload_firmware(
         self, metadata: m.FirmwareMetadata, path: Path, *, enable_monitoring: bool
     ):
