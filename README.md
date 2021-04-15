@@ -10,11 +10,9 @@ First, you have to log in and select a tenant:
 ```python
 from iot_inspector_client import Client
 
-client = Client(
-    api_url=YOUR_API_URL,
-    id_token_public_key=ID_TOKEN_PUBLIC_KEY,
-    tenant_token_public_key=TENANT_TOKEN_PUBLIC_KEY,
-)
+YOUR_API_URL = "https://demo.iot-inspector.com/api"
+
+client = Client(api_url=YOUR_API_URL)
 
 client.login(EMAIL, PASSWORD)
 tenant = client.get_tenant("Environment name")
