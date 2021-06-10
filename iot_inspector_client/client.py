@@ -136,9 +136,13 @@ class Client:
 
     @_tenant_required
     def _post_with_token(self, path: str, **kwargs):
-        headers = {"Authorization": "Bearer " + self._state.raw_tenant_token}
+        headers = self.get_auth_headers()
 
         return self._post(path, headers, **kwargs)
+
+    @_tenant_required
+    def get_auth_headers(self):
+        return {"Authorization": "Bearer " + self._state.raw_tenant_token}
 
     @_login_required
     def get_tenant(self, name: str):
