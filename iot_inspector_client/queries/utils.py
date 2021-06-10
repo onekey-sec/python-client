@@ -1,4 +1,5 @@
 import functools
+from .. import queries
 
 try:
     from importlib import resources
@@ -10,4 +11,4 @@ except ImportError:
 def load_query(query_name) -> str:
     """Load a predefined GraphQL query and cache it."""
     assert query_name.endswith(".graphql")
-    return resources.read_text("iot_inspector.queries", query_name)
+    return resources.read_text(queries, query_name)
