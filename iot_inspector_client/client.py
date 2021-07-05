@@ -50,8 +50,9 @@ class Client:
         self,
         api_url: str,
         ca_bundle: Optional[Path] = None,
+        disable_tls_verify: Optional[bool] = False,
     ):
-        self._client = self._setup_httpx_client(api_url, ca_bundle)
+        self._client = self._setup_httpx_client(api_url, ca_bundle, disable_tls_verify)
 
         self._id_token_public_key = self._load_key("id-token-public-key")
 
@@ -59,7 +60,15 @@ class Client:
 
         self._state = _LoginState()
 
-    def _setup_httpx_client(self, api_url: str, ca_bundle: Optional[Path] = None):
+    def _setup_httpx_client(
+        self,
+        api_url: str,
+        ca_bundle: Optional[Path] = None,
+        disable_tls_verify: Optional[bool] = False,
+    ):
+        if disable_tls_verify:
+            return httpx.Client(base_url=api_url, verify=False)
+
         if ca_bundle is not None:
             ca = ca_bundle.expanduser()
             if not ca.exists():
