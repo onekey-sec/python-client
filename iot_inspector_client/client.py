@@ -22,19 +22,6 @@ from . import keys
 CLIENT_ID = "IoT Inspector Python SDK"
 TOKEN_NAMESPACE = "https://www.iot-inspector.com/"
 
-IOT_INSPECTOR_KEYS = {
-    "demo.iot-inspector.com": {
-        "id_token_public_key": "demo_id_token_public_key.pem",
-        "tenant_token_public_key": "demo_tenant_token_public_key.pem",
-        "ca_path": "ca.pem",
-    },
-    "*.iot-inspector.com": {
-        "id_token_public_key": "platform_id_token_public_key.pem",
-        "tenant_token_public_key": "platform_tenant_token_public_key.pem",
-        "ca_path": "ca.pem",
-    },
-}
-
 
 def _login_required(func):
     @functools.wraps(func)
@@ -62,22 +49,26 @@ class Client:
     def __init__(
         self,
         api_url: str,
-        id_token_public_key: Optional[Path] = None,
-        tenant_token_public_key: Optional[Path] = None,
         ca_bundle: Optional[Path] = None,
+        disable_tls_verify: Optional[bool] = False,
     ):
-        self._id_token_public_key = self._load_key(
-            api_url, "id_token_public_key", id_token_public_key
-        )
+        self._client = self._setup_httpx_client(api_url, ca_bundle, disable_tls_verify)
 
-        self._tenant_token_public_key = self._load_key(
-            api_url, "tenant_token_public_key", tenant_token_public_key
-        )
+        self._id_token_public_key = self._load_key("id-token-public-key")
 
-        self._client = self._setup_httpx_client(api_url, ca_bundle)
+        self._tenant_token_public_key = self._load_key("tenant-token-public-key")
+
         self._state = _LoginState()
 
-    def _setup_httpx_client(self, api_url: str, ca_bundle: Optional[Path] = None):
+    def _setup_httpx_client(
+        self,
+        api_url: str,
+        ca_bundle: Optional[Path] = None,
+        disable_tls_verify: Optional[bool] = False,
+    ):
+        if disable_tls_verify:
+            return httpx.Client(base_url=api_url, verify=False)
+
         if ca_bundle is not None:
             ca = ca_bundle.expanduser()
             if not ca.exists():
@@ -85,27 +76,16 @@ class Client:
 
             return httpx.Client(base_url=api_url, verify=str(ca))
         else:
-            resource_name = self._get_resource_name(api_url, "ca_path")
-            with resources.path(keys, resource_name) as ca:
+            with resources.path(keys, "ca.pem") as ca:
                 return httpx.Client(base_url=api_url, verify=str(ca))
 
-    def _load_key(self, api_url: str, key_name: str, path: Optional[Path] = None):
+    def _load_key(self, key_name: str, path: Optional[Path] = None):
         if path is not None:
             return path.read_bytes()
         else:
-            resource_name = self._get_resource_name(api_url, key_name)
-            return resources.read_binary(keys, resource_name)
-
-    @staticmethod
-    def _get_resource_name(api_url: str, key_name: str):
-        domain = httpx.URL(api_url).host
-        try:
-            return IOT_INSPECTOR_KEYS[domain][key_name]
-        except KeyError:
-            # We try to match on a wildcard domain as it is used for *.iot-inspector.com domain
-            domain_base = domain.split(".", maxsplit=1)[-1]
-            wildcard_domain = f"*.{domain_base}"
-            return IOT_INSPECTOR_KEYS.get(wildcard_domain, {}).get(key_name)
+            response = self._client.get(f"/{key_name}.pem")
+            response.raise_for_status()
+            return response.read()
 
     def login(self, email: str, password: str):
         nonce = secrets.token_urlsafe()
