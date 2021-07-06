@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "iot_inspector_client"
-version = "0.1.0"
+version = "0.1.1"
 description = "IoT Inspector API client"
 homepage = "https://www.iot-inspector.com/"
 authors = ["IoT Inspector <support@iot-inspector.com>"]
