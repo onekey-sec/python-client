@@ -1,5 +1,5 @@
 mutation CreateFirmwareUpload(
-  $firmware: FirmwareInput!
+  $firmware: FirmwareUploadMetadataInput!
   $vendorName: String!
   $productName: String!
   $productCategory: String
@@ -23,7 +23,7 @@ mutation CreateFirmwareUpload(
         message
         code
         ... on ValidationError {
-          field_path
+          fieldPath
         }
       }
     }
