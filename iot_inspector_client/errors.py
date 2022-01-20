@@ -32,3 +32,6 @@ class QueryError(ClientError):
 
     def __str__(self):
         return json.dumps(self._errors, indent=4)
+
+class WSSDisabledSubcribeNotPossible(ClientError):
+	MESSAGE = "WSS is disabled. For using subscriptions WSS needs to be enabled."

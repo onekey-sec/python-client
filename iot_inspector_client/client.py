@@ -1,8 +1,9 @@
 import functools
 import gc
 import secrets
+import re
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any, Callable
 
 try:
     from importlib import resources
@@ -10,6 +11,7 @@ except ImportError:
     import importlib_resources as resources
 
 import httpx
+from python_graphql_client import GraphqlClient
 from pydantic import parse_obj_as
 from authlib.oidc.core import IDToken
 from authlib.jose import jwt
@@ -51,13 +53,17 @@ class Client:
         api_url: str,
         ca_bundle: Optional[Path] = None,
         disable_tls_verify: Optional[bool] = False,
+        disable_wss: Optional[bool] = False,
     ):
         self._client = self._setup_httpx_client(api_url, ca_bundle, disable_tls_verify)
 
         self._id_token_public_key = self._load_key("id-token-public-key")
 
         self._tenant_token_public_key = self._load_key("tenant-token-public-key")
-
+        self._disable_wss = disable_wss
+        if not disable_wss:
+            self._wss_url = re.sub("^https\:\/\/", "wss://", api_url) + "/graphql"	
+		
         self._state = _LoginState()
 
     def _setup_httpx_client(
@@ -78,6 +84,25 @@ class Client:
         else:
             with resources.path(keys, "ca.pem") as ca:
                 return httpx.Client(base_url=api_url, verify=str(ca))
+
+    def _setup_graphql_client(
+        self,
+        api_url: str,
+        ca_bundle: Optional[Path] = None,
+        disable_tls_verify: Optional[bool] = False,
+    ):
+        if disable_tls_verify:
+            return GraphqlClient(endpoint=api_url, verify=False)
+
+        if ca_bundle is not None:
+            ca = ca_bundle.expanduser()
+            if not ca.exists():
+                raise errors.InvalidCABundle
+
+            return GraphqlClient(endpoint=api_url, verify=str(ca))
+        else:
+            with resources.path(keys, "ca.pem") as ca:
+                return GraphqlClient(endpoint=api_url, verify=str(ca))		
 
     def _load_key(self, key_name: str, path: Optional[Path] = None):
         if path is not None:
@@ -192,6 +217,24 @@ class Client:
         upload_url = res["createFirmwareUpload"]["uploadUrl"]
         res = self._post_with_token(upload_url, files={"firmware": path.open("rb")})
         return res
+
+    @_tenant_required
+    async def subscribe(
+        self,
+        query: str,
+        handle: Callable,
+        variables: dict = None,
+        operation_name: str = None,
+        headers: dict = {},
+        init_payload: dict = {},
+    ):
+        if not self._disable_wss:
+            init_payload = self.get_auth_headers()
+        	
+            subscribe_client = self._setup_graphql_client(api_url=self._wss_url)
+            await subscribe_client.subscribe(query=query, init_payload=init_payload, handle=handle)
+        else:
+            raise error.WSSDisabledSubcribeNotPossible
 
     def logout(self):
         del self._state
