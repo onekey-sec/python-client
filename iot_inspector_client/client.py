@@ -1,9 +1,11 @@
+"""Python Client for IoT Inspector."""
+
 import functools
 import gc
-import secrets
 import re
+import secrets
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Callable
+from typing import Callable, Dict, List, Optional
 
 try:
     from importlib import resources
@@ -11,15 +13,14 @@ except ImportError:
     import importlib_resources as resources
 
 import httpx
-from python_graphql_client import GraphqlClient
-from pydantic import parse_obj_as
-from authlib.oidc.core import IDToken
 from authlib.jose import jwt
-from .queries import load_query
-from . import errors
-from . import models as m
-from . import keys
+from authlib.oidc.core import IDToken
+from pydantic import parse_obj_as
+from python_graphql_client import GraphqlClient
 
+from . import errors, keys
+from . import models as m
+from .queries import load_query
 
 CLIENT_ID = "IoT Inspector Python SDK"
 TOKEN_NAMESPACE = "https://www.iot-inspector.com/"
@@ -48,30 +49,38 @@ def _tenant_required(func):
 
 
 class Client:
+    """Client class to access IoT Inspector GraphQL API."""
+
     def __init__(
-        self,
-        api_url: str,
-        ca_bundle: Optional[Path] = None,
-        disable_tls_verify: Optional[bool] = False,
-        disable_wss: Optional[bool] = False,
-    ):
-        self._client = self._setup_httpx_client(api_url, ca_bundle, disable_tls_verify)
+            self,
+            api_url: str,
+            ca_bundle: Optional[Path] = None,
+            disable_tls_verify: Optional[bool] = False,
+            disable_wss: Optional[bool] = False,
+            ):
+        """Client initialization."""
+        self._client = self._setup_httpx_client(
+            api_url, ca_bundle, disable_tls_verify)
 
         self._id_token_public_key = self._load_key("id-token-public-key")
 
-        self._tenant_token_public_key = self._load_key("tenant-token-public-key")
+        self._tenant_token_public_key = self._load_key(
+                "tenant-token-public-key")
+
         self._disable_wss = disable_wss
         if not disable_wss:
-            self._wss_url = re.sub("^https\:\/\/", "wss://", api_url) + "/graphql"	
-		
-        self._state = _LoginState()
+            self._wss_url = re.sub(
+                    r"^https\:\/\/", "wss://", api_url) + "/graphql"
+
+            self._state = _LoginState()
 
     def _setup_httpx_client(
-        self,
-        api_url: str,
-        ca_bundle: Optional[Path] = None,
-        disable_tls_verify: Optional[bool] = False,
-    ):
+            self,
+            api_url: str,
+            ca_bundle: Optional[Path] = None,
+            disable_tls_verify: Optional[bool] = False,
+            ):
+        """Set up https connection."""
         if disable_tls_verify:
             return httpx.Client(base_url=api_url, verify=False)
 
@@ -86,11 +95,12 @@ class Client:
                 return httpx.Client(base_url=api_url, verify=str(ca))
 
     def _setup_graphql_client(
-        self,
-        api_url: str,
-        ca_bundle: Optional[Path] = None,
-        disable_tls_verify: Optional[bool] = False,
-    ):
+            self,
+            api_url: str,
+            ca_bundle: Optional[Path] = None,
+            disable_tls_verify: Optional[bool] = False,
+            ):
+        """Set up wss connection."""
         if disable_tls_verify:
             return GraphqlClient(endpoint=api_url, verify=False)
 
@@ -102,7 +112,7 @@ class Client:
             return GraphqlClient(endpoint=api_url, verify=str(ca))
         else:
             with resources.path(keys, "ca.pem") as ca:
-                return GraphqlClient(endpoint=api_url, verify=str(ca))		
+                return GraphqlClient(endpoint=api_url, verify=str(ca))
 
     def _load_key(self, key_name: str, path: Optional[Path] = None):
         if path is not None:
@@ -113,21 +123,22 @@ class Client:
             return response.read()
 
     def login(self, email: str, password: str):
+        """Perfom login and receive token."""
         nonce = secrets.token_urlsafe()
         payload = {
-            "email": email,
-            "password": password,
-            "client_id": CLIENT_ID,
-            "nonce": nonce,
-        }
+                "email": email,
+                "password": password,
+                "client_id": CLIENT_ID,
+                "nonce": nonce,
+                }
         json_res = self._post("/authorize", json=payload)
         id_token = _verify_token(
-            nonce,
-            email,
-            raw_token=json_res["id_token"],
-            public_key=self._id_token_public_key,
-            claims_cls=IDToken,
-        )
+                nonce,
+                email,
+                raw_token=json_res["id_token"],
+                public_key=self._id_token_public_key,
+                claims_cls=IDToken,
+                )
         tenants = id_token[TOKEN_NAMESPACE + "tenants"]
         tenants = parse_obj_as(List[m.Tenant], tenants)
         self._state.tenants = {e.name: e for e in tenants}
@@ -147,6 +158,7 @@ class Client:
 
     @_tenant_required
     def get_auth_headers(self):
+        """Return authorization header."""
         return {"Authorization": "Bearer " + self._state.raw_tenant_token}
 
     @_login_required
@@ -164,26 +176,26 @@ class Client:
         """Select the Environment (Tenant) you want to work with."""
         nonce = secrets.token_urlsafe()
         payload = {
-            "id_token": self._state.raw_id_token,
-            "client_id": CLIENT_ID,
-            "tenant_id": str(tenant.id),
-            "nonce": nonce,
-        }
+                "id_token": self._state.raw_id_token,
+                "client_id": CLIENT_ID,
+                "tenant_id": str(tenant.id),
+                "nonce": nonce,
+                }
         json_res = self._post("/token", json=payload)
         _verify_token(
-            nonce,
-            self._state.email,
-            json_res["tenant_token"],
-            self._tenant_token_public_key,
-        )
+                nonce,
+                self._state.email,
+                json_res["tenant_token"],
+                self._tenant_token_public_key,
+                )
         self._state.raw_tenant_token = json_res["tenant_token"]
 
     @_tenant_required
     def query(self, query: str, variables: Optional[Dict] = None):
-        """Issues a GraphQL query and returns the results"""
+        """Issues a GraphQL query and returns the results."""
         res = self._post_with_token(
-            "/graphql", json={"query": query, "variables": variables}
-        )
+                "/graphql", json={"query": query, "variables": variables}
+                )
 
         if "errors" in res:
             raise errors.QueryError(res["errors"])
@@ -192,21 +204,25 @@ class Client:
 
     @_tenant_required
     def upload_firmware(
-        self, metadata: m.FirmwareMetadata, path: Path, *, enable_monitoring: bool
-    ):
+            self,
+            metadata: m.FirmwareMetadata,
+            path: Path, *,
+            enable_monitoring: bool
+            ):
+        """Upload firmware to IoT Inspector."""
         variables = {
-            "firmware": {
-                "name": metadata.name,
-                "version": metadata.version,
-                "releaseDate": metadata.release_date,
-                "notes": metadata.notes,
-                "enableMonitoring": enable_monitoring,
-            },
-            "vendorName": metadata.vendor_name,
-            "productName": metadata.product_name,
-            "productCategory": metadata.product_category,
-            "productGroupID": str(metadata.product_group_id),
-        }
+                "firmware": {
+                    "name": metadata.name,
+                    "version": metadata.version,
+                    "releaseDate": metadata.release_date,
+                    "notes": metadata.notes,
+                    "enableMonitoring": enable_monitoring,
+                    },
+                "vendorName": metadata.vendor_name,
+                "productName": metadata.product_name,
+                "productCategory": metadata.product_category,
+                "productGroupID": str(metadata.product_group_id),
+                }
 
         upload_mutation = load_query("create_firmware_upload.graphql")
         res = self.query(upload_mutation, variables=variables)
@@ -215,55 +231,63 @@ class Client:
             raise errors.QueryError(res["createFirmwareUpload"]["errors"])
 
         upload_url = res["createFirmwareUpload"]["uploadUrl"]
-        res = self._post_with_token(upload_url, files={"firmware": path.open("rb")})
+        res = self._post_with_token(
+                upload_url, files={"firmware": path.open("rb")})
         return res
 
     @_tenant_required
     async def subscribe(
-        self,
-        query: str,
-        handle: Callable,
-        variables: dict = None,
-        operation_name: str = None,
-        headers: dict = {},
-        init_payload: dict = {},
-    ):
+            self,
+            query: str,
+            handle: Callable,
+            variables: dict = None,
+            operation_name: str = None,
+            headers: dict = {},
+            init_payload: dict = {},
+            ):
+        """Subscribe to subscription."""
         if not self._disable_wss:
             init_payload = self.get_auth_headers()
-        	
-            subscribe_client = self._setup_graphql_client(api_url=self._wss_url)
-            await subscribe_client.subscribe(query=query, init_payload=init_payload, handle=handle)
+
+            subscribe_client = self._setup_graphql_client(
+                    api_url=self._wss_url)
+
+            await subscribe_client.subscribe(
+                    query=query, init_payload=init_payload, handle=handle
+                    )
         else:
-            raise error.WSSDisabledSubcribeNotPossible
+            raise errors.WSSDisabledSubcribeNotPossible
 
     def logout(self):
+        """Logout from IoT Inspector."""
         del self._state
         gc.collect()
         self._state = _LoginState()
 
 
 def _verify_token(
-    nonce: str, email, raw_token: str, public_key: bytes, claims_cls=None
-):
+        nonce: str, email, raw_token: str, public_key: bytes, claims_cls=None
+        ):
     """Verify a JWT token signature with the public_key."""
     claims_options = {
-        "iss": {"essential": True, "value": TOKEN_NAMESPACE},
-        "aud": {"essential": True, "value": CLIENT_ID},
-        "sub": {"essential": True, "value": email},
-    }
+            "iss": {"essential": True, "value": TOKEN_NAMESPACE},
+            "aud": {"essential": True, "value": CLIENT_ID},
+            "sub": {"essential": True, "value": email},
+            }
     decoded_token = jwt.decode(
-        raw_token,
-        public_key,
-        claims_cls=claims_cls,
-        claims_options=claims_options,
-        claims_params={"nonce": nonce},
-    )
+            raw_token,
+            public_key,
+            claims_cls=claims_cls,
+            claims_options=claims_options,
+            claims_params={"nonce": nonce},
+            )
     decoded_token.validate()
     return decoded_token
 
 
 class _LoginState:
     """Keeps state after login.
+
     Client.logout() will simply delete the instance from memory.
     """
 

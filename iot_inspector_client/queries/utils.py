@@ -1,4 +1,7 @@
+"""Query functions."""
+
 import functools
+
 from .. import queries
 
 try:
