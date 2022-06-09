@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "iot_inspector_client"
+name = "onekey_client"
 version = "1.2.1"
-description = "IoT Inspector API client"
-homepage = "https://www.iot-inspector.com/"
-authors = ["IoT Inspector <support@iot-inspector.com>"]
+description = "ONEKEY API client"
+homepage = "https://www.onekey.com/"
+authors = ["ONEKEY <support@onekey.com>"]
 license = "MIT"
 readme = "README.md"
 keywords = ["iot", "security", "firmware", "analysis"]
@@ -16,8 +16,8 @@ classifiers = [
     "Topic :: Security"]
 
 [tool.poetry.urls]
-"GitHub" = "https://github.com/IoT-Inspector/python-client"
-"Bug Tracker" = "https://github.com/IoT-Inspector/python-client/issues"
+"GitHub" = "https://github.com/onekey-sec/python-client"
+"Bug Tracker" = "https://github.com/onekey-sec/python-client/issues"
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
