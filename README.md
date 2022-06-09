@@ -1,16 +1,16 @@
-# IoT Inspector API Client
+# ONEKEY API Client
 
 This is the official Python client for the
-[IoT Inspector](https://www.iot-inspector.com/) public API.
+[ONEKEY](https://www.onekey.com/) public API.
 
 # Usage
 
 First, you have to log in and select a tenant:
 
 ```python
-from iot_inspector_client import Client
+from onekey_client import Client
 
-YOUR_API_URL = "https://demo.iot-inspector.com/api"
+YOUR_API_URL = "https://demo.onekey.com/api"
 
 client = Client(api_url=YOUR_API_URL)
 
@@ -62,5 +62,5 @@ print(res)
 
 # Support
 
-You can create a [new issue in this repo](https://github.com/IoT-Inspector/python-client/issues/new)
-or contact us at support@iot-inspector.com.
+You can create a [new issue in this repo](https://github.com/onekey-sec/python-client/issues/new)
+or contact us at support@onekey.com.

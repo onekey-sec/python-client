@@ -19,8 +19,8 @@ from . import models as m
 from . import keys
 
 
-CLIENT_ID = "IoT Inspector Python SDK"
-TOKEN_NAMESPACE = "https://www.iot-inspector.com/"
+CLIENT_ID = "ONEKEY Python SDK"
+TOKEN_NAMESPACE = "https://www.onekey.com/"
 
 
 def _login_required(func):

@@ -3,14 +3,14 @@ import sys
 from getpass import getpass
 from pathlib import Path
 
-from iot_inspector_client import Client
-from iot_inspector_client.models import FirmwareMetadata
+from onekey_client import Client
+from onekey_client.models import FirmwareMetadata
 
-API_URL = "https://demo.iot-inspector.com/api"
+API_URL = "https://demo.onekey.com/api"
 EMAIL = sys.argv[1]
 PASSWORD = getpass()
 
-print("Login to IoT Inspector", EMAIL, "@", API_URL)
+print("Login to ONEKEY", EMAIL, "@", API_URL)
 client = Client(API_URL)
 client.login(EMAIL, PASSWORD)
 
