@@ -20,8 +20,8 @@ classifiers = [
 "Bug Tracker" = "https://github.com/onekey-sec/python-client/issues"
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
-httpx = "^0.17.0"
+python = "^3.7.0"
+httpx = "0.23.0"
 pydantic = "1.8.2"
 Authlib = "^0.15.3"
 importlib-resources = "^5.1.2"
