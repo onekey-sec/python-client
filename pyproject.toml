@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "onekey_client"
-version = "2.0.0"
+version = "2.0.1"
 description = "ONEKEY API client"
 homepage = "https://www.onekey.com/"
 authors = ["ONEKEY <support@onekey.com>"]
