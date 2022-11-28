@@ -8,8 +8,7 @@ mutation CreateFirmwareUpload(
   createFirmwareUpload(
     input: {
       firmware: $firmware
-      vendor: { name: $vendorName }
-      product: { name: $productName, category: $productCategory }
+      product: { name: $productName, category: $productCategory, vendor: $vendorName }
       productGroup: { id: $productGroupID }
     }
   ) {
