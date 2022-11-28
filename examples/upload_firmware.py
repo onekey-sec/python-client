@@ -6,7 +6,7 @@ from pathlib import Path
 from onekey_client import Client
 from onekey_client.models import FirmwareMetadata
 
-API_URL = "https://demo.onekey.com/api"
+API_URL = "https://app.eu.onekey.com/api"
 EMAIL = sys.argv[1]
 PASSWORD = getpass()
 

@@ -3,7 +3,7 @@ import sys
 from getpass import getpass
 from onekey_client import Client
 
-API_URL = "https://demo.onekey.com/api"
+API_URL = "https://app.eu.onekey.com/api"
 EMAIL = sys.argv[1]
 PASSWORD = getpass()
 
