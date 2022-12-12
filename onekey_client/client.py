@@ -154,10 +154,10 @@ class Client:
         self._state.raw_tenant_token = json_res["tenant_token"]
 
     @_tenant_required
-    def query(self, query: str, variables: Optional[Dict] = None):
+    def query(self, query: str, variables: Optional[Dict] = None, timeout=60):
         """Issues a GraphQL query and returns the results"""
         res = self._post_with_token(
-            "/graphql", json={"query": query, "variables": variables}
+            "/graphql", json={"query": query, "variables": variables}, timeout=timeout
         )
 
         if "errors" in res:
