@@ -1,9 +1,13 @@
 import sys
 import time
+from pathlib import Path
+from typing import Optional
 from uuid import UUID
 
 import click
 import httpx
+
+from junit_xml import TestSuite, TestCase
 
 from onekey_client import Client
 from onekey_client.queries import load_query
@@ -165,6 +169,94 @@ class ResultHandler:
         return f"https://{self.client.api_url.host}/firmwares/compare-firmwares?baseFirmwareId={recent_id}&otherFirmwareId={firmware_id}"
 
 
+class JUnitExporter:
+    def __init__(self, client: Client, firmware_id: UUID):
+        self.client = client
+        self.firmware_id = str(firmware_id)
+
+    def create_new_issue_testcase(self, issue):
+        url = self.get_firmware_issues_ui_url()
+        test_case = TestCase(
+            name=issue["id"],
+            classname=f"Issue: {issue['type']}",
+            file=issue["file"]["path"],
+            status="NEW",
+            url=url,
+        )
+
+        test_case.add_failure_info(
+            message="New issue",
+            output=f"""New issue detected
+    URL: {url}
+    Type: {issue["type"]}
+    Severity: {issue["severity"]}
+    File: {issue["file"]["path"]}
+    """,
+        )
+        return test_case
+
+    def create_new_cve_testcase(self, cve):
+        cve = dict(cve)
+        url = self.get_firmware_cves_ui_url()
+        test_case = TestCase(name=cve["id"], classname="CVE", status="NEW", url=url)
+        test_case.add_failure_info(
+            message="New CVE",
+            output=f"""New CVE detected
+    URL: {url}
+    CVE ID: {cve['id']}
+    Severity: {cve['severity']}
+    Description: {cve['description']}
+    """,
+        )
+        return test_case
+
+    def generate_junit_xml(
+        self, new_issues, dropped_issues, new_cves, dropped_cves, output_path: Path
+    ):
+        new_issues_test_cases = [
+            self.create_new_issue_testcase(issue) for issue in new_issues
+        ]
+
+        dropped_issues_test_cases = [
+            TestCase(
+                name=issue["id"],
+                classname=f"Issue: {issue['type']}",
+                file=issue["file"]["path"],
+                status="DROPPED",
+                url=self.get_firmware_issues_ui_url(),
+            )
+            for issue in dropped_issues
+        ]
+
+        new_cves_test_cases = [self.create_new_cve_testcase(cve) for cve in new_cves]
+        dropped_cves_test_cases = [
+            TestCase(
+                name=cve_id,
+                classname="CVE",
+                status="DROPPED",
+                url=self.get_firmware_cves_ui_url(),
+            )
+            for cve_id in dropped_cves
+        ]
+
+        issues_test_suite = TestSuite(
+            "ONEKEY identified issues",
+            new_issues_test_cases + dropped_issues_test_cases,
+        )
+        cves_test_suite = TestSuite(
+            "ONEKEY identified CVE entries",
+            new_cves_test_cases + dropped_cves_test_cases,
+        )
+        with output_path.open("w") as f:
+            TestSuite.to_file(f, [issues_test_suite, cves_test_suite])
+
+    def get_firmware_issues_ui_url(self):
+        return f"https://{self.client.api_url.host}/firmwares/issues?firmwareId={self.firmware_id}"
+
+    def get_firmware_cves_ui_url(self):
+        return f"https://{self.client.api_url.host}/firmwares/cves?firmwareId={self.firmware_id}"
+
+
 @click.command()
 @click.option("--firmware-id", required=True, type=UUID, help="Firmware ID")
 @click.option(
@@ -196,6 +288,11 @@ class ResultHandler:
     show_default=True,
     help="Wait time between retries due to communication problem",
 )
+@click.option(
+    "--junit-path",
+    type=click.Path(exists=False, path_type=Path),
+    help="File to export JUNIT xml",
+)
 @click.pass_obj
 def ci_result(
     client: Client,
@@ -204,6 +301,7 @@ def ci_result(
     retry_count: int,
     retry_wait: int,
     check_interval: int,
+    junit_path: Optional[Path],
 ):
     """Fetch analysis results for CI"""
 
@@ -215,6 +313,12 @@ def ci_result(
         check_interval=check_interval,
     )
     new_issues, dropped_issues, new_cves, dropped_cves = handler.get_result()
+
+    if junit_path is not None:
+        junit_exporter = JUnitExporter(client, firmware_id)
+        junit_exporter.generate_junit_xml(
+            new_issues, dropped_issues, new_cves, dropped_cves, junit_path
+        )
 
     exit_code = exit_code if new_issues or new_cves else 0
 
