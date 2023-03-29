@@ -159,6 +159,11 @@ class Client:
             self._tenant_token_public_key,
         )
         self._state.raw_tenant_token = json_res["tenant_token"]
+        self._state.tenant = tenant
+
+    @_tenant_required
+    def refresh_tenant_token(self):
+        self.use_tenant(self._state.tenant)
 
     @_tenant_required
     def query(self, query: str, variables: Optional[Dict] = None, timeout=60):
@@ -236,3 +241,4 @@ class _LoginState:
         self.tenants = None
         self.raw_id_token = None
         self.raw_tenant_token = None
+        self.tenant = None
