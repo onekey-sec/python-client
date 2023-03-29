@@ -4,6 +4,8 @@ import secrets
 from pathlib import Path
 from typing import Optional, List, Dict
 
+from httpx import URL
+
 try:
     from importlib import resources
 except ImportError:
@@ -52,6 +54,7 @@ class Client:
         ca_bundle: Optional[Path] = None,
         disable_tls_verify: Optional[bool] = False,
     ):
+        self._api_url = URL(api_url)
         self._client = self._setup_httpx_client(api_url, ca_bundle, disable_tls_verify)
 
         self._id_token_public_key = self._load_key("id-token-public-key")
@@ -86,6 +89,10 @@ class Client:
             response = self._client.get(f"/{key_name}.pem")
             response.raise_for_status()
             return response.read()
+
+    @property
+    def api_url(self) -> URL:
+        return self._api_url
 
     def login(self, email: str, password: str):
         nonce = secrets.token_urlsafe()
