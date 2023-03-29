@@ -1,0 +1,9 @@
+query GetFirmwareLatestAnalysisState($id: ID!) {
+  firmware(id: $id) {
+    name
+    latestAnalysis {
+      state
+      result
+    }
+  }
+}

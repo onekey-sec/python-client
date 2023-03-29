@@ -1,0 +1,35 @@
+query CompareFirmware($base: ID!, $other: ID!){
+  compareFirmwareAnalyses (base: $base, other: $other) {
+    issues {
+      new {
+        __typename
+        id
+        severity
+        type
+        file {
+          path
+        }
+      }
+      dropped {
+        __typename
+        id
+        severity
+        type
+        file {
+          path
+        }
+      }
+    }
+
+    cveEntries {
+      new {
+        id
+        description
+        severity
+      }
+      dropped {
+        id
+      }
+    }
+  }
+}
