@@ -205,6 +205,12 @@ class Client:
         res = self._post_with_token(upload_url, files={"firmware": path.open("rb")})
         return res
 
+    @_tenant_required
+    def get_product_groups(self):
+        product_groups_query = load_query("get_product_groups.graphql")
+        response = self.query(product_groups_query)
+        return {pg["name"]: pg["id"] for pg in response["allProductGroups"]}
+
     def logout(self):
         del self._state
         gc.collect()
