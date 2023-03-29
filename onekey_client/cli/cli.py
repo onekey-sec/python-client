@@ -6,6 +6,7 @@ import httpx
 from onekey_client import Client
 from .firmware_upload import upload_firmware
 from .misc import list_tenants, get_tenant_token
+from .ci import ci_result
 
 
 @click.group()
@@ -67,6 +68,7 @@ def cli(ctx, api_url, disable_tls_verify, email, password, tenant_name):
 cli.add_command(list_tenants)
 cli.add_command(get_tenant_token)
 cli.add_command(upload_firmware)
+cli.add_command(ci_result)
 
 
 def main():

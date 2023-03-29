@@ -1,0 +1,26 @@
+query GetFimrwareLatestResult($id: ID!){
+  firmware(id: $id) {
+    latestIssues (filter: {elf: false}){
+      __typename
+      id
+      severity
+      type
+      file {
+        path
+      }
+    }
+
+    cveMatches {
+      component {
+        name
+        version
+      }
+      cve {
+        id
+        description
+        severity
+      }
+    }
+
+  }
+}
