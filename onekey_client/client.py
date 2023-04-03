@@ -179,7 +179,12 @@ class Client:
 
     @_tenant_required
     def upload_firmware(
-        self, metadata: m.FirmwareMetadata, path: Path, *, enable_monitoring: bool
+        self,
+        metadata: m.FirmwareMetadata,
+        path: Path,
+        *,
+        enable_monitoring: bool,
+        timeout=60,
     ):
         variables = {
             "firmware": {
@@ -202,7 +207,9 @@ class Client:
             raise errors.QueryError(res["createFirmwareUpload"]["errors"])
 
         upload_url = res["createFirmwareUpload"]["uploadUrl"]
-        res = self._post_with_token(upload_url, files={"firmware": path.open("rb")})
+        res = self._post_with_token(
+            upload_url, files={"firmware": path.open("rb")}, timeout=timeout
+        )
         return res
 
     @_tenant_required
