@@ -142,7 +142,9 @@ class ResultHandler:
                 sys.exit(10)
 
     def get_recent_firmware_id(self):
-        res = self.client.query(GET_ALL_FIRMWARES, {"id": self.firmware_id})
+        res = self.client.query(
+            GET_ALL_FIRMWARES, {"id": self.firmware_id, "firmwareCount": 2}
+        )
 
         firmware_ids = [
             timeline["firmware"]["id"]

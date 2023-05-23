@@ -1,7 +1,9 @@
-query GetSameProductFirmwares($id: ID!){
+query GetSameProductFirmwares(
+  $id: ID!
+  $firmwareCount: Int!){
   firmware(id: $id) {
     product {
-      firmwareTimeline {
+      firmwareTimeline(count: $firmwareCount) {
         firmware {
           id
         }
