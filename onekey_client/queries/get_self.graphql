@@ -1,0 +1,8 @@
+query {
+    tenant {
+        name
+    }
+    user {
+        email
+    }
+}

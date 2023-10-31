@@ -12,16 +12,23 @@ class ClientError(Exception):
 class NotLoggedIn(ClientError):
     MESSAGE = (
         "You are not logged in yet. \n"
-        "You have to call client.login(email, password) first."
+        "You have to call client.login(email, password) first or provide API token with use_token()."
     )
 
 
 class TenantNotSelected(ClientError):
-    MESSAGE = "You have to select a Tenant (Environment) with client.use_tenant(tenant) first."
+    MESSAGE = (
+        "You have to select a Tenant (Environment) with client.use_tenant(tenant) first"
+        "or provide API token with use_token()."
+    )
 
 
 class InvalidCABundle(ClientError):
     MESSAGE = "The CA bundle is invalid or doesn't exist."
+
+
+class InvalidAPIToken(ClientError):
+    MESSAGE = "The API Token is invalid."
 
 
 class QueryError(ClientError):

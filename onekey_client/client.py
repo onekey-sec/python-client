@@ -28,7 +28,7 @@ TOKEN_NAMESPACE = "https://www.onekey.com/"
 def _login_required(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        if self._state.raw_id_token is None:
+        if not self._state.tenants:
             raise errors.NotLoggedIn
 
         return func(self, *args, **kwargs)
@@ -116,6 +116,21 @@ class Client:
         self._state.email = email
         self._state.raw_id_token = json_res["id_token"]
 
+    def use_token(self, token: str):
+        try:
+            tenant_id, _ = token.split("/", 1)
+        except ValueError:
+            raise errors.InvalidAPIToken()
+
+        self._state.raw_tenant_token = token
+
+        self_query = load_query("get_self.graphql")
+        response = self.query(self_query)
+        self._state.email = response["user"]["email"]
+        tenant = m.Tenant(id=tenant_id, name=response["tenant"]["name"])
+        self._state.tenants = {tenant.name: tenant}
+        self._state.tenant = tenant
+
     def _post(self, path: str, headers: Optional[Dict] = None, **kwargs):
         response = self._client.post(path, headers=headers, **kwargs)
         response.raise_for_status()
@@ -163,7 +178,8 @@ class Client:
 
     @_tenant_required
     def refresh_tenant_token(self):
-        self.use_tenant(self._state.tenant)
+        if self._state.raw_id_token is not None:
+            self.use_tenant(self._state.tenant)
 
     @_tenant_required
     def query(self, query: str, variables: Optional[Dict] = None, timeout=60):
