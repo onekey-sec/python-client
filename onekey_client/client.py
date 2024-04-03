@@ -209,6 +209,7 @@ class Client:
                 "releaseDate": metadata.release_date,
                 "notes": metadata.notes,
                 "enableMonitoring": enable_monitoring,
+                "analysisConfigurationId": str(metadata.analysis_configuration_id),
             },
             "vendorName": metadata.vendor_name,
             "productName": metadata.product_name,
@@ -233,6 +234,14 @@ class Client:
         product_groups_query = load_query("get_product_groups.graphql")
         response = self.query(product_groups_query)
         return {pg["name"]: pg["id"] for pg in response["allProductGroups"]}
+
+    @_tenant_required
+    def get_analysis_configurations(self):
+        analysis_configurations_query = load_query(
+            "get_analysis_configurations.graphql"
+        )
+        response = self.query(analysis_configurations_query)
+        return {c["name"]: c["id"] for c in response["allAnalysisConfigurations"]}
 
     def logout(self):
         del self._state
