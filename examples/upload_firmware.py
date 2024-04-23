@@ -32,12 +32,24 @@ GET_ALL_PRODUCT_GROUP_IDS = """
 response = client.query(GET_ALL_PRODUCT_GROUP_IDS)
 product_group_ids = [pg["id"] for pg in response["allProductGroups"]]
 
+GET_ANALYSIS_CONFIGURATIONS = """
+query {
+  allAnalysisConfigurations {
+    id
+    name
+  }
+}
+"""
+response = client.query(GET_ANALYSIS_CONFIGURATIONS)
+analysis_configuration_ids = [c["id"] for c in response["allAnalysisConfigurations"]]
+
 
 metadata = FirmwareMetadata(
     name="myFirmware",
     vendor_name="myVendor",
     product_name="myProduct",
     product_group_id=product_group_ids[0],
+    analysis_configuration_id=analysis_configuration_ids[0],
 )
 
 firmware_path = Path(sys.argv[2])

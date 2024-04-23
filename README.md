@@ -107,6 +107,17 @@ query {
 """
 res = client.query(GET_PRODUCT_GROUPS)
 default_product_group = next(pg for pg in res["allProductGroups"] if pg["name"] == "Default")
+
+GET_ANALYSIS_CONFIGURATIONS = """
+query {
+  allAnalysisConfigurations {
+    id
+    name
+  }
+}
+"""
+res = client.query(GET_ANALYSIS_CONFIGURATIONS)
+default_analysis_configuration = next(conf for conf in res["allAnalysisConfigurations"] if conf["name"] == "Default")
 ```
 
 You can upload firmwares:
@@ -117,6 +128,7 @@ metadata = FirmwareMetadata(
     vendor_name="myVendor",
     product_name="myProduct",
     product_group_id=default_product_group["id"],
+    analysis_configuration_id=default_analysis_configuration["id"],
 )
 
 firmware_path = Path("/path/to/firmware.bin")
