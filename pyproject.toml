@@ -21,7 +21,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.8.0"
-httpx = "0.23.0"
+httpx = "0.28.1"
 pydantic = "1.10.20"
 Authlib = ">=0.15.3,<1.4.0"
 importlib-resources = "^5.1.2"
