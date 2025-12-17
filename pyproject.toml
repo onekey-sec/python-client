@@ -1,39 +1,40 @@
-[tool.poetry]
+[project]
 name = "onekey_client"
 version = "2.3.0"
 description = "ONEKEY API client"
-homepage = "https://www.onekey.com/"
-authors = ["ONEKEY <support@onekey.com>"]
-license = "MIT"
+authors = [{ name = "ONEKEY", email = "support@onekey.com" }]
+requires-python = ">=3.9"
 readme = "README.md"
+license = "MIT"
 keywords = ["iot", "security", "firmware", "analysis"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Security"]
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Security",
+]
+dependencies = [
+  "httpx==0.28.1",
+  "pydantic==2.10.6",
+  "Authlib>=1.4.1,<2.0.0",
+  "importlib-resources>=6.0.0,<7",
+  "click>=8.1.3,<9",
+  "junit-xml>=1.9,<2",
+]
 
-[tool.poetry.urls]
-"GitHub" = "https://github.com/onekey-sec/python-client"
+[project.urls]
+Homepage = "https://www.onekey.com/"
+GitHub = "https://github.com/onekey-sec/python-client"
 "Bug Tracker" = "https://github.com/onekey-sec/python-client/issues"
 
-[tool.poetry.dependencies]
-python = "^3.9.0"
-httpx = "0.28.1"
-pydantic = "2.10.6"
-Authlib = ">=1.4.1,<2.0.0"
-importlib-resources = "^6.0.0"
-click = "^8.1.3"
-junit-xml = "^1.9"
+[project.scripts]
+onekey = "onekey_client.cli.cli:main"
 
-[tool.poetry.dev-dependencies]
-black = "^25.0.0"
+[dependency-groups]
+dev = ["black>=25.0.0,<26"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-onekey = "onekey_client.cli.cli:main"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
