@@ -178,7 +178,7 @@ class Client:
 
     @_tenant_required
     def query(self, query: str, variables: dict | None = None, timeout=60):
-        """Issues a GraphQL query and returns the results"""
+        """Issues a GraphQL query and returns the results."""
         res = self._post_with_token(
             "/graphql", json={"query": query, "variables": variables}, timeout=timeout
         )
@@ -266,6 +266,7 @@ def _verify_token(
 
 class _LoginState:
     """Keeps state after login.
+
     Client.logout() will simply delete the instance from memory.
     """
 

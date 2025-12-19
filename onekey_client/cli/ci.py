@@ -301,7 +301,7 @@ def ci_result(
     check_interval: int,
     junit_path: Path | None,
 ):
-    """Fetch analysis results for CI"""
+    """Fetch analysis results for CI."""
     handler = ResultHandler(
         client,
         firmware_id,

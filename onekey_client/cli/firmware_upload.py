@@ -44,7 +44,7 @@ def upload_firmware(
     name: str | None,
     filename: Path,
 ):
-    """Uploads a firmware to the ONEKEY platform"""
+    """Upload a firmware to the ONEKEY platform."""
     product_group_id = _get_product_group_id_by_name(client, product_group_name)
     analysis_configuration_id = _get_analysis_configuration_id_by_name(
         client, analysis_configuration_name
