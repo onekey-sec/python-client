@@ -1,15 +1,11 @@
 import functools
 import gc
 import secrets
+from importlib import resources
 from pathlib import Path
 from typing import Optional, List, Dict
 
 from httpx import URL
-
-try:
-    from importlib import resources
-except ImportError:
-    import importlib_resources as resources
 
 import httpx
 from pydantic import parse_obj_as
