@@ -33,7 +33,7 @@ GitHub = "https://github.com/onekey-sec/python-client"
 onekey = "onekey_client.cli.cli:main"
 
 [dependency-groups]
-dev = ["ruff==0.14.9"]
+dev = ["ruff==0.14.10"]
 
 [build-system]
 requires = ["hatchling"]
