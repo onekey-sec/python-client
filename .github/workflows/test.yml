@@ -12,6 +12,9 @@ jobs:
       with:
         enable-cache: true
         cache-dependency-glob: "uv.lock"
-        python-version-file: "pyproject.toml"
+    - name: Ruff format
       run: |
-        uv run black --check .
+        uv run ruff format --diff --exit-non-zero-on-format
+    - name: Ruff check
+      run: |
+        uv run ruff check
