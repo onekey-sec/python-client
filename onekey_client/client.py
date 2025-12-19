@@ -219,10 +219,9 @@ class Client:
             raise errors.QueryError(res["createFirmwareUpload"]["errors"])
 
         upload_url = res["createFirmwareUpload"]["uploadUrl"]
-        res = self._post_with_token(
+        return self._post_with_token(
             upload_url, files={"firmware": path.open("rb")}, timeout=timeout
         )
-        return res
 
     @_tenant_required
     def get_product_groups(self):
