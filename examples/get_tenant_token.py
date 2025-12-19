@@ -17,7 +17,8 @@ print("Tenants:", ", ".join([tenant.name for tenant in tenants]))
 
 if len(sys.argv) > 2:
     # Filter tenants that matches the provided pattern
-    tenants = filter(lambda tenant: sys.argv[2] in tenant.name, tenants)
+    pattern = sys.argv[2]
+    tenants = [t for t in tenants if pattern in t.name]
 
 # Pick the first one
 tenant = tenants[0]
