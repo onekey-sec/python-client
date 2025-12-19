@@ -84,7 +84,7 @@ def _get_product_group_id_by_name(client: Client, product_group_name: str):
     except KeyError:
         click.echo(f"Missing product group: {product_group_name}")
         click.echo("Available product groups:")
-        for pg in product_groups.keys():
+        for pg in product_groups:
             click.echo(f"- {pg}")
         sys.exit(10)
 
@@ -99,6 +99,6 @@ def _get_analysis_configuration_id_by_name(
     except KeyError:
         click.echo(f"Missing analysis configuration {analysis_configuration_name}")
         click.echo("Available analysis configurations:")
-        for config in analysis_configurations.keys():
+        for config in analysis_configurations:
             click.echo(f"- {config}")
         sys.exit(12)
