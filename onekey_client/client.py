@@ -115,7 +115,7 @@ class Client:
         try:
             tenant_id, _ = token.split("/", 1)
         except ValueError:
-            raise errors.InvalidAPIToken()
+            raise errors.InvalidAPIToken from None
 
         self._state.raw_tenant_token = token
 
