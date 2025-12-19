@@ -1,2 +1,3 @@
 from .client import Client as Client
-from .models import Tenant as Tenant, FirmwareMetadata as FirmwareMetadata
+from .models import FirmwareMetadata as FirmwareMetadata
+from .models import Tenant as Tenant

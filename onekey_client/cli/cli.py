@@ -4,9 +4,10 @@ import click
 import httpx
 
 from onekey_client import Client
-from .firmware_upload import upload_firmware
-from .misc import list_tenants, get_tenant_token
+
 from .ci import ci_result
+from .firmware_upload import upload_firmware
+from .misc import get_tenant_token, list_tenants
 
 
 @click.group()

@@ -1,6 +1,6 @@
 import datetime as dt
-from typing import Optional
 from uuid import UUID
+
 from pydantic import BaseModel
 
 
@@ -11,11 +11,11 @@ class Tenant(BaseModel):
 
 class FirmwareMetadata(BaseModel):
     name: str
-    version: Optional[str] = None
-    release_date: Optional[dt.datetime] = None
-    notes: Optional[str] = None
+    version: str | None = None
+    release_date: dt.datetime | None = None
+    notes: str | None = None
     vendor_name: str
     product_name: str
-    product_category: Optional[str] = None
+    product_category: str | None = None
     product_group_id: UUID
     analysis_configuration_id: UUID

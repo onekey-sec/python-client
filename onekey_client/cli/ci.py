@@ -1,13 +1,11 @@
 import sys
 import time
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 import click
 import httpx
-
-from junit_xml import TestSuite, TestCase
+from junit_xml import TestCase, TestSuite
 
 from onekey_client import Client
 from onekey_client.queries import load_query
@@ -42,9 +40,7 @@ class ResultHandler:
             except httpx.HTTPError as e:
                 if error_count <= self.retry_count:
                     click.echo(
-                        "Error communicating with ONEKEY platform, retrying; error='{}'".format(
-                            str(e)
-                        )
+                        f"Error communicating with ONEKEY platform, retrying; error='{e!s}'"
                     )
                     time.sleep(self.retry_wait * error_count)
                     error_count += 1
@@ -138,7 +134,7 @@ class ResultHandler:
                     )
                     break
             except Exception as e:
-                click.echo(f"Error fetching results {str(e)}")
+                click.echo(f"Error fetching results {e!s}")
                 sys.exit(10)
 
     def get_recent_firmware_id(self):
@@ -156,11 +152,11 @@ class ResultHandler:
             click.echo(
                 f"Latest firmware upload is not the current firmware, skipping comparison with previous, latest={latest_id}"
             )
-            return
+            return None
 
         if not firmware_ids:
             click.echo("No previous firmware")
-            return
+            return None
 
         return firmware_ids[0]
 
@@ -303,10 +299,9 @@ def ci_result(
     retry_count: int,
     retry_wait: int,
     check_interval: int,
-    junit_path: Optional[Path],
+    junit_path: Path | None,
 ):
-    """Fetch analysis results for CI"""
-
+    """Fetch analysis results for CI."""
     handler = ResultHandler(
         client,
         firmware_id,
