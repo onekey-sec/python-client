@@ -205,9 +205,9 @@ class JUnitExporter:
             message="New CVE",
             output=f"""New CVE detected
     URL: {url}
-    CVE ID: {cve['id']}
-    Severity: {cve['severity']}
-    Description: {cve['description']}
+    CVE ID: {cve["id"]}
+    Severity: {cve["severity"]}
+    Description: {cve["description"]}
     """,
         )
         return test_case
