@@ -2,9 +2,6 @@ import functools
 import gc
 import secrets
 from pathlib import Path
-from typing import Optional, List, Dict
-
-from httpx import URL
 
 try:
     from importlib import resources
@@ -12,14 +9,14 @@ except ImportError:
     import importlib_resources as resources
 
 import httpx
-from pydantic import parse_obj_as
-from authlib.oidc.core import IDToken
 from authlib.jose import jwt
-from .queries import load_query
-from . import errors
-from . import models as m
-from . import keys
+from authlib.oidc.core import IDToken
+from httpx import URL
+from pydantic import parse_obj_as
 
+from . import errors, keys
+from . import models as m
+from .queries import load_query
 
 CLIENT_ID = "ONEKEY Python SDK"
 TOKEN_NAMESPACE = "https://www.onekey.com/"
@@ -51,8 +48,8 @@ class Client:
     def __init__(
         self,
         api_url: str,
-        ca_bundle: Optional[Path] = None,
-        disable_tls_verify: Optional[bool] = False,
+        ca_bundle: Path | None = None,
+        disable_tls_verify: bool | None = False,
     ):
         self._api_url = URL(api_url)
         self._client = self._setup_httpx_client(api_url, ca_bundle, disable_tls_verify)
@@ -66,8 +63,8 @@ class Client:
     def _setup_httpx_client(
         self,
         api_url: str,
-        ca_bundle: Optional[Path] = None,
-        disable_tls_verify: Optional[bool] = False,
+        ca_bundle: Path | None = None,
+        disable_tls_verify: bool | None = False,
     ):
         if disable_tls_verify:
             return httpx.Client(base_url=api_url, verify=False)
@@ -78,17 +75,15 @@ class Client:
                 raise errors.InvalidCABundle
 
             return httpx.Client(base_url=api_url, verify=str(ca))
-        else:
-            with resources.path(keys, "ca.pem") as ca:
-                return httpx.Client(base_url=api_url, verify=str(ca))
+        with resources.path(keys, "ca.pem") as ca:
+            return httpx.Client(base_url=api_url, verify=str(ca))
 
-    def _load_key(self, key_name: str, path: Optional[Path] = None):
+    def _load_key(self, key_name: str, path: Path | None = None):
         if path is not None:
             return path.read_bytes()
-        else:
-            response = self._client.get(f"/{key_name}.pem")
-            response.raise_for_status()
-            return response.read()
+        response = self._client.get(f"/{key_name}.pem")
+        response.raise_for_status()
+        return response.read()
 
     @property
     def api_url(self) -> URL:
@@ -111,7 +106,7 @@ class Client:
             claims_cls=IDToken,
         )
         tenants = id_token[TOKEN_NAMESPACE + "tenants"]
-        tenants = parse_obj_as(List[m.Tenant], tenants)
+        tenants = parse_obj_as(list[m.Tenant], tenants)
         self._state.tenants = {e.name: e for e in tenants}
         self._state.email = email
         self._state.raw_id_token = json_res["id_token"]
@@ -131,7 +126,7 @@ class Client:
         self._state.tenants = {tenant.name: tenant}
         self._state.tenant = tenant
 
-    def _post(self, path: str, headers: Optional[Dict] = None, **kwargs):
+    def _post(self, path: str, headers: dict | None = None, **kwargs):
         response = self._client.post(path, headers=headers, **kwargs)
         response.raise_for_status()
         return response.json()
@@ -152,7 +147,7 @@ class Client:
         return self._state.tenants[name]
 
     @_login_required
-    def get_all_tenants(self) -> List[m.Tenant]:
+    def get_all_tenants(self) -> list[m.Tenant]:
         """Get the list of Tenants you have access to."""
         return list(self._state.tenants.values())
 
@@ -182,7 +177,7 @@ class Client:
             self.use_tenant(self._state.tenant)
 
     @_tenant_required
-    def query(self, query: str, variables: Optional[Dict] = None, timeout=60):
+    def query(self, query: str, variables: dict | None = None, timeout=60):
         """Issues a GraphQL query and returns the results"""
         res = self._post_with_token(
             "/graphql", json={"query": query, "variables": variables}, timeout=timeout

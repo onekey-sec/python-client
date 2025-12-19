@@ -1,6 +1,7 @@
 import json
 import sys
 from getpass import getpass
+
 from onekey_client import Client
 
 API_URL = "https://app.eu.onekey.com/api"

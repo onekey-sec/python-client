@@ -1,10 +1,9 @@
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 
-from onekey_client import FirmwareMetadata, Client
+from onekey_client import Client, FirmwareMetadata
 from onekey_client.errors import QueryError
 
 
@@ -41,12 +40,11 @@ def upload_firmware(
     vendor_name: str,
     product_group_name: str,
     analysis_configuration_name: str,
-    version: Optional[str],
-    name: Optional[str],
+    version: str | None,
+    name: str | None,
     filename: Path,
 ):
     """Uploads a firmware to the ONEKEY platform"""
-
     product_group_id = _get_product_group_id_by_name(client, product_group_name)
     analysis_configuration_id = _get_analysis_configuration_id_by_name(
         client, analysis_configuration_name

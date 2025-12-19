@@ -1,5 +1,4 @@
 import sys
-
 from getpass import getpass
 from pathlib import Path
 
