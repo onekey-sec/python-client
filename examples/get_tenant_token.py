@@ -16,7 +16,7 @@ tenants = client.get_all_tenants()
 
 print("Tenants:", ", ".join([tenant.name for tenant in tenants]))
 
-if len(sys.argv) > 2:
+if len(sys.argv) > 2:  # noqa: PLR2004 (magic constant)
     # Filter tenants that matches the provided pattern
     tenants = filter(lambda tenant: sys.argv[2] in tenant.name, tenants)
 

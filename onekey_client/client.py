@@ -19,7 +19,7 @@ from . import models as m
 from .queries import load_query
 
 CLIENT_ID = "ONEKEY Python SDK"
-TOKEN_NAMESPACE = "https://www.onekey.com/"
+TOKEN_NAMESPACE = "https://www.onekey.com/"  # noqa: S105 (hardcoded credential)
 
 
 def _login_required(func):
@@ -67,7 +67,7 @@ class Client:
         disable_tls_verify: bool | None = False,
     ):
         if disable_tls_verify:
-            return httpx.Client(base_url=api_url, verify=False)
+            return httpx.Client(base_url=api_url, verify=False)  # noqa: S501 (TLS certificate validation disabled)
 
         if ca_bundle is not None:
             ca = ca_bundle.expanduser()
