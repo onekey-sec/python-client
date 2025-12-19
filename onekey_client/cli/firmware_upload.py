@@ -71,7 +71,7 @@ def upload_firmware(
         click.echo(res["id"])
     except QueryError as e:
         click.echo("Error during firmware upload:")
-        for error in e._errors:
+        for error in e.errors:
             click.echo(f"- {error['message']}")
         sys.exit(11)
 
