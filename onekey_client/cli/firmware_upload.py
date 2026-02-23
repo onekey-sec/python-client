@@ -32,7 +32,12 @@ from onekey_client.errors import QueryError
 )
 @click.option("--version", help="Firmware version")
 @click.option("--name", help="Firmware name")
-@click.argument("filename", type=click.Path(exists=True, path_type=Path))
+@click.option(
+    "--sbom", help="Firmware SBOM", type=click.Path(exists=True, path_type=Path)
+)
+@click.argument(
+    "filename", type=click.Path(exists=True, path_type=Path), required=False
+)
 @click.pass_obj
 def upload_firmware(
     client: Client,
@@ -42,17 +47,23 @@ def upload_firmware(
     analysis_configuration_name: str,
     version: str | None,
     name: str | None,
-    filename: Path,
+    sbom: Path | None,
+    filename: Path | None,
 ):
-    """Upload a firmware to the ONEKEY platform."""
+    """Upload a firmware / SBOM to the ONEKEY platform."""
+    if filename is None and sbom is None:
+        error = "Either `--sbom` or `FILENAME` or both must be provided"
+        raise click.BadParameter(error)
+
     product_group_id = _get_product_group_id_by_name(client, product_group_name)
     analysis_configuration_id = _get_analysis_configuration_id_by_name(
         client, analysis_configuration_name
     )
 
     if name is None:
+        postfix = filename.name if filename is not None else sbom.stem
         name = (
-            f"{vendor_name}-{product_name}-{filename.name}"
+            f"{vendor_name}-{product_name}-{postfix}"
             if version is None
             else f"{vendor_name}-{product_name}-{version}"
         )
@@ -67,7 +78,9 @@ def upload_firmware(
     )
 
     try:
-        res = client.upload_firmware(metadata, filename, enable_monitoring=False)
+        res = client.upload_firmware(
+            metadata, filename, sbom_path=sbom, enable_monitoring=False
+        )
         click.echo(res["id"])
     except QueryError as e:
         click.echo("Error during firmware upload:")

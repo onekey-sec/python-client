@@ -188,11 +188,14 @@ class Client:
     def upload_firmware(
         self,
         metadata: m.FirmwareMetadata,
-        path: Path,
+        path: Path | None,
         *,
+        sbom_path: Path | None = None,
         enable_monitoring: bool,
         timeout=60,
     ):
+        assert path is not None or sbom_path is not None
+
         variables = {
             "firmware": {
                 "name": metadata.name,
@@ -215,9 +218,12 @@ class Client:
             raise errors.QueryError(res["createFirmwareUpload"]["errors"])
 
         upload_url = res["createFirmwareUpload"]["uploadUrl"]
-        return self._post_with_token(
-            upload_url, files={"firmware": path.open("rb")}, timeout=timeout
-        )
+
+        files = {}
+        files["firmware"] = path.open("rb") if path is not None else b""
+        if sbom_path is not None:
+            files["sbom"] = sbom_path.open("rb")
+        return self._post_with_token(upload_url, files=files, timeout=timeout)
 
     @_tenant_required
     def get_product_groups(self):
