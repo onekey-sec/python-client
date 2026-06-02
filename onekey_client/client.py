@@ -1,6 +1,7 @@
 import functools
 import gc
 import secrets
+import time
 from importlib import resources
 from pathlib import Path
 
@@ -261,7 +262,7 @@ def _verify_token(
         claims_options=claims_options,
         claims_params={"nonce": nonce},
     )
-    decoded_token.validate()
+    decoded_token.validate(now=time.time())
     return decoded_token
 
 
