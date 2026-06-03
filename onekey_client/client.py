@@ -9,7 +9,7 @@ import httpx
 from authlib.jose import jwt
 from authlib.oidc.core import IDToken
 from httpx import URL
-from pydantic import parse_obj_as
+from pydantic import TypeAdapter
 
 from . import errors, keys
 from . import models as m
@@ -103,7 +103,7 @@ class Client:
             claims_cls=IDToken,
         )
         tenants = id_token[TOKEN_NAMESPACE + "tenants"]
-        tenants = parse_obj_as(list[m.Tenant], tenants)
+        tenants = TypeAdapter(list[m.Tenant]).validate_python(tenants)
         self._state.tenants = {e.name: e for e in tenants}
         self._state.email = email
         self._state.raw_id_token = json_res["id_token"]
