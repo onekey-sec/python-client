@@ -3,7 +3,7 @@ import sys
 import click
 import httpx
 
-from onekey_client import Client
+from onekey_client import APP_NAME, APP_VERSION, Client
 
 from .ci import ci_result
 from .firmware_upload import upload_firmware
@@ -11,6 +11,7 @@ from .misc import get_tenant_token, list_tenants
 
 
 @click.group()
+@click.version_option(version=APP_VERSION, prog_name=APP_NAME)
 @click.option(
     "--api-url",
     default="https://app.eu.onekey.com/api",

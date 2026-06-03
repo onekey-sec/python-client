@@ -3,6 +3,7 @@ import gc
 import secrets
 import time
 from importlib import resources
+from importlib.metadata import version
 from pathlib import Path
 
 import httpx
@@ -17,6 +18,8 @@ from .queries import load_query
 
 CLIENT_ID = "ONEKEY Python SDK"
 TOKEN_NAMESPACE = "https://www.onekey.com/"  # noqa: S105 (hardcoded credential)
+APP_NAME = "onekey_client"
+APP_VERSION = version(APP_NAME)
 
 
 def _login_required(func):
@@ -63,17 +66,18 @@ class Client:
         ca_bundle: Path | None = None,
         disable_tls_verify: bool | None = False,
     ):
+        headers = {"User-Agent": f"{APP_NAME}/{APP_VERSION}"}
         if disable_tls_verify:
-            return httpx.Client(base_url=api_url, verify=False)  # noqa: S501 (TLS certificate validation disabled)
+            return httpx.Client(base_url=api_url, headers=headers, verify=False)  # noqa: S501 (TLS certificate validation disabled)
 
         if ca_bundle is not None:
             ca = ca_bundle.expanduser()
             if not ca.exists():
                 raise errors.InvalidCABundle
 
-            return httpx.Client(base_url=api_url, verify=str(ca))
+            return httpx.Client(base_url=api_url, headers=headers, verify=str(ca))
         with resources.path(keys, "ca.pem") as ca:
-            return httpx.Client(base_url=api_url, verify=str(ca))
+            return httpx.Client(base_url=api_url, headers=headers, verify=str(ca))
 
     def _load_key(self, key_name: str, path: Path | None = None):
         if path is not None:
