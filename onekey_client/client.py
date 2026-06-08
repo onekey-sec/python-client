@@ -1,6 +1,7 @@
 import functools
 import gc
 import secrets
+import ssl
 from importlib import resources
 from importlib.metadata import version
 from pathlib import Path
@@ -65,18 +66,34 @@ class Client:
         ca_bundle: Path | None = None,
         disable_tls_verify: bool | None = False,
     ):
-        headers = {"User-Agent": f"{APP_NAME}/{APP_VERSION}"}
-        if disable_tls_verify:
-            return httpx.Client(base_url=api_url, headers=headers, verify=False)  # noqa: S501 (TLS certificate validation disabled)
+        return httpx.Client(
+            base_url=api_url,
+            headers={
+                "User-Agent": f"{APP_NAME}/{APP_VERSION}",
+            },
+            verify=self._create_ssl_context(
+                ca_bundle=ca_bundle, disable_tls_verify=disable_tls_verify
+            ),
+        )
 
-        if ca_bundle is not None:
+    def _create_ssl_context(
+        self,
+        ca_bundle: Path | None,
+        disable_tls_verify: bool | None,
+    ) -> ssl.SSLContext:
+        context = ssl.create_default_context()
+        if disable_tls_verify:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+        elif ca_bundle is not None:
             ca = ca_bundle.expanduser()
             if not ca.exists():
                 raise errors.InvalidCABundle
-
-            return httpx.Client(base_url=api_url, headers=headers, verify=str(ca))
-        with resources.path(keys, "ca.pem") as ca:
-            return httpx.Client(base_url=api_url, headers=headers, verify=str(ca))
+            context.load_verify_locations(cafile=ca)
+        else:
+            with resources.path(keys, "ca.pem") as ca:
+                context.load_verify_locations(cafile=ca)
+        return context
 
     def _load_key(self, key_name: str, path: Path | None = None):
         if path is not None:
