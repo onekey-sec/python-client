@@ -35,6 +35,19 @@ from onekey_client.errors import QueryError
 @click.option(
     "--sbom", help="Firmware SBOM", type=click.Path(exists=True, path_type=Path)
 )
+@click.option(
+    "--enable-monitoring",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Enable the monitoring for the uploaded firmware"
+)
+@click.option(
+    "--timeout",
+    default=60,
+    show_default=True,
+    help="Define the timeout (in s) for uploading the image"
+)
 @click.argument(
     "filename", type=click.Path(exists=True, path_type=Path), required=False
 )
@@ -48,6 +61,8 @@ def upload_firmware(
     version: str | None,
     name: str | None,
     sbom: Path | None,
+    enable_monitoring : bool | False,
+    timeout: int | 60,
     filename: Path | None,
 ):
     """Upload a firmware / SBOM to the ONEKEY platform."""
@@ -79,7 +94,7 @@ def upload_firmware(
 
     try:
         res = client.upload_firmware(
-            metadata, filename, sbom_path=sbom, enable_monitoring=False
+            metadata, filename, sbom_path=sbom, enable_monitoring=enable_monitoring, timeout=timeout
         )
         click.echo(res["id"])
     except QueryError as e:
