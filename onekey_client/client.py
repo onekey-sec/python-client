@@ -225,6 +225,7 @@ class Client:
                 "notes": metadata.notes,
                 "enableMonitoring": enable_monitoring,
                 "analysisConfigurationId": str(metadata.analysis_configuration_id),
+                "labels": metadata.labels,
             },
             "vendorName": metadata.vendor_name,
             "productName": metadata.product_name,
