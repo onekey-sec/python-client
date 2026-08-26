@@ -35,6 +35,14 @@ from onekey_client.errors import QueryError
 @click.option(
     "--sbom", help="Firmware SBOM", type=click.Path(exists=True, path_type=Path)
 )
+@click.option(
+    "--timeout",
+    help="Timeout for HTTP requests",
+    type=click.IntRange(min=1, max=600),
+    default=60,
+)
+@click.option("--monitoring", is_flag=True, default=False, help="Enable monitoring")
+@click.option("--label", multiple=True, help="Add a label (repeatable)")
 @click.argument(
     "filename", type=click.Path(exists=True, path_type=Path), required=False
 )
@@ -45,8 +53,11 @@ def upload_firmware(
     vendor_name: str,
     product_group_name: str,
     analysis_configuration_name: str,
+    timeout: int,
+    monitoring: bool,
     version: str | None,
     name: str | None,
+    label: tuple[str],
     sbom: Path | None,
     filename: Path | None,
 ):
@@ -75,11 +86,16 @@ def upload_firmware(
         product_group_id=product_group_id,
         version=version,
         analysis_configuration_id=analysis_configuration_id,
+        labels=list(label),
     )
 
     try:
         res = client.upload_firmware(
-            metadata, filename, sbom_path=sbom, enable_monitoring=False
+            metadata,
+            filename,
+            sbom_path=sbom,
+            enable_monitoring=monitoring,
+            timeout=timeout,
         )
         click.echo(res["id"])
     except QueryError as e:

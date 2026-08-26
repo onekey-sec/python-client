@@ -19,3 +19,4 @@ class FirmwareMetadata(BaseModel):
     product_category: str | None = None
     product_group_id: UUID
     analysis_configuration_id: UUID
+    labels: list[str] | None = None
