@@ -2,7 +2,7 @@ name: PyPI Publish
 
 on:
   release:
-    types: [created]
+    types: [published]
   workflow_dispatch:
     inputs:
       test_release:
@@ -22,7 +22,16 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
       - run: uv build
-      - run: uv publish
+
+      - name: Publish to TestPyPI
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test_release == true }}
+        run: uv publish
         env:
-          UV_PUBLISH_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && secrets.TEST_PYPI_API_TOKEN || secrets.POETRY_PYPI_TOKEN_PYPI }}
-          UV_PUBLISH_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
+          UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          UV_PUBLISH_URL: https://test.pypi.org/legacy/
+
+      - name: Publish to PyPI
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.test_release == false }}
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.POETRY_PYPI_TOKEN_PYPI }}
