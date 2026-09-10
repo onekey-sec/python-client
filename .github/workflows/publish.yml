@@ -12,17 +12,65 @@ on:
         type: boolean
 
 jobs:
-  publish:
+  build:
+    name: Build distribution
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v6
-      - name: Install uv & Python
+        with:
+          persist-credentials: false
+      - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
-      - run: uv build
-      - run: uv publish
-        env:
-          UV_PUBLISH_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && secrets.TEST_PYPI_API_TOKEN || secrets.POETRY_PYPI_TOKEN_PYPI }}
-          UV_PUBLISH_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
+      - name: Build distribution
+        run: uv build
+      - name: Store distribution packages
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish distribution to PyPI
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/onekey_client
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distribution packages
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-to-testpypi:
+    name: Publish distribution to TestPyPI
+    if: github.event_name == 'workflow_dispatch' && inputs.test_release
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/onekey_client
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distribution packages
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
