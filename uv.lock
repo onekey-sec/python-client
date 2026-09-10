@@ -1,6 +1,6 @@
 version = 1
 revision = 3
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 [[package]]
 name = "annotated-types"
@@ -278,7 +278,7 @@ wheels = [
 
 [[package]]
 name = "onekey-client"
-version = "2.7.0"
+version = "2.8.0"
 source = { editable = "." }
 dependencies = [
     { name = "authlib" },
