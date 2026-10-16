@@ -34,6 +34,9 @@ jobs:
         run: uv build
       - name: Store distribution packages
         uses: actions/upload-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
 
   publish-to-testpypi:
     name: Publish distribution to TestPyPI
