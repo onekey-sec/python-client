@@ -43,6 +43,7 @@ from onekey_client.errors import QueryError
 )
 @click.option("--monitoring", is_flag=True, default=False, help="Enable monitoring")
 @click.option("--label", multiple=True, help="Add a label (repeatable)")
+@click.option("--notes", help="Free-text notes for the firmware")
 @click.argument(
     "filename", type=click.Path(exists=True, path_type=Path), required=False
 )
@@ -58,6 +59,7 @@ def upload_firmware(
     version: str | None,
     name: str | None,
     label: tuple[str],
+    notes: str | None,
     sbom: Path | None,
     filename: Path | None,
 ):
@@ -87,6 +89,7 @@ def upload_firmware(
         version=version,
         analysis_configuration_id=analysis_configuration_id,
         labels=list(label),
+        notes=notes,
     )
 
     try:
