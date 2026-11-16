@@ -232,6 +232,11 @@ class Client:
             "productCategory": metadata.product_category,
             "productGroupID": str(metadata.product_group_id),
         }
+        if metadata.properties is not None:
+            variables["firmware"]["properties"] = [
+                {"name": name, "value": value}
+                for name, value in metadata.properties.items()
+            ]
 
         upload_mutation = load_query("create_firmware_upload.graphql")
         res = self.query(upload_mutation, variables=variables)
