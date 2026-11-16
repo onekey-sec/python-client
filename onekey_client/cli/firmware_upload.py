@@ -7,6 +7,19 @@ from onekey_client import Client, FirmwareMetadata
 from onekey_client.errors import QueryError
 
 
+def _parse_properties(
+    _ctx: click.Context, _param: click.Parameter, values: tuple[str, ...]
+) -> dict[str, str]:
+    properties = {}
+    for value in values:
+        name, separator, property_value = value.partition("=")
+        if not separator or not name.strip():
+            error = "Expected NAME=VALUE with a non-empty property name"
+            raise click.BadParameter(error)
+        properties[name] = property_value
+    return properties
+
+
 @click.command()
 @click.option(
     "--product", "product_name", required=True, help="Product name to add the firmware"
@@ -44,6 +57,14 @@ from onekey_client.errors import QueryError
 @click.option("--monitoring", is_flag=True, default=False, help="Enable monitoring")
 @click.option("--label", multiple=True, help="Add a label (repeatable)")
 @click.option("--notes", help="Free-text notes for the firmware")
+@click.option(
+    "--property",
+    "properties",
+    multiple=True,
+    metavar="NAME=VALUE",
+    callback=_parse_properties,
+    help="Add a firmware property (repeatable; last value wins for duplicate names)",
+)
 @click.argument(
     "filename", type=click.Path(exists=True, path_type=Path), required=False
 )
@@ -60,6 +81,7 @@ def upload_firmware(
     name: str | None,
     label: tuple[str],
     notes: str | None,
+    properties: dict[str, str],
     sbom: Path | None,
     filename: Path | None,
 ):
@@ -90,6 +112,7 @@ def upload_firmware(
         analysis_configuration_id=analysis_configuration_id,
         labels=list(label),
         notes=notes,
+        properties=properties or None,
     )
 
     try:
